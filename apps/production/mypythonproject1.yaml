@@ -1,0 +1,47 @@
+###############################################################################
+# ArgoCD Application — production
+#
+# Production uses manual sync (no auto-sync) so that a human approval step
+# in GitHub Environments gates the actual Kubernetes rollout.
+# The CD workflow updates the values.yaml; a developer / CD workflow triggers
+# the sync via `argocd app sync` after the GitHub Environment approval gate.
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mypythonproject1-production
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: mypythonproject1
+    environment: production
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployments
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: deployments
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: deployments
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YilingCAI/python-angular-project1-gitops.git
+    targetRevision: main
+    path: charts/mypythonproject1
+    helm:
+      valueFiles:
+        - ../../environments/production/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mypythonproject1-production
+  # Production: NO automated sync — require explicit sync trigger
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 2
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 10

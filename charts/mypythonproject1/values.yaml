@@ -1,0 +1,191 @@
+###############################################################################
+# Chart default values — DO NOT DEPLOY THIS FILE DIRECTLY.
+# Environment-specific overrides live in environments/<env>/values.yaml.
+###############################################################################
+
+global:
+  # AWS ECR registry — set per environment
+  registry: ""
+  # imagePullPolicy: Always ensures EKS always pulls the pinned digest
+  imagePullPolicy: Always
+
+# ─── Backend (FastAPI) ───────────────────────────────────────────────────────
+backend:
+  enabled: true
+
+  image:
+    repository: mypythonproject1/backend
+    # tag: overridden by CI via environments/<env>/values.yaml
+    tag: "latest"
+    pullPolicy: Always
+
+  replicaCount: 2
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  # Liveness / readiness
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  # Pod topology spread — spread across AZs
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: backend
+
+  # Environment variables loaded from K8s Secrets and ConfigMaps
+  env:
+    # Non-sensitive values — safe to set here
+    - name: LOG_LEVEL
+      value: "info"
+    - name: PORT
+      value: "8000"
+
+  # Secrets injected via AWS Secrets Manager CSI driver
+  # See templates/backend/deployment.yaml for the volumeMount definition
+  secretsManager:
+    enabled: true
+    secretProviderClass: mypythonproject1-backend-secrets
+
+  # Node selector / tolerations for dedicated node groups (optional)
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ─── Frontend (Angular / Nginx) ─────────────────────────────────────────────
+frontend:
+  enabled: true
+
+  image:
+    repository: mypythonproject1/frontend
+    tag: "latest"
+    pullPolicy: Always
+
+  replicaCount: 2
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 4200
+
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 4200
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 4200
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: frontend
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ─── Ingress (ALB via aws-load-balancer-controller) ─────────────────────────
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # Certificate ARN — override in environment values
+    alb.ingress.kubernetes.io/certificate-arn: ""
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+  host: ""   # e.g. app.staging.example.com — set per environment
+
+# ─── ServiceAccount (IRSA) ──────────────────────────────────────────────────
+serviceAccount:
+  create: true
+  name: ""
+  # IAM role ARN for IRSA — set per environment
+  annotations:
+    eks.amazonaws.com/role-arn: ""
+
+# ─── Rollout strategy ───────────────────────────────────────────────────────
+# Applied to both backend and frontend deployments
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
