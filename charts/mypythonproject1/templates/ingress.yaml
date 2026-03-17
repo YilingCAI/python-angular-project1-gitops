@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mypythonproject1.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mypythonproject1.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          # API routes → backend
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mypythonproject1.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          # Health check route → backend
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "mypythonproject1.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          # All other routes → frontend (SPA)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mypythonproject1.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+{{- end }}

@@ -1,0 +1,71 @@
+###############################################################################
+# Staging environment overrides
+# Image tags below are automatically updated by the CI/CD pipeline.
+# DO NOT edit image tags manually — they will be overwritten on next deploy.
+###############################################################################
+
+global:
+  # ECR registry — set to your AWS account ECR endpoint
+  registry: "372212891811.dkr.ecr.us-east-1.amazonaws.com"
+  imagePullPolicy: Always
+
+backend:
+  image:
+    repository: mypythonproject1/backend
+    # ↓ Updated automatically by cd-eks-gitops.yml
+    tag: "staging-0000000"
+
+  replicaCount: 2
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 5
+
+  env:
+    - name: LOG_LEVEL
+      value: "debug"
+    - name: PORT
+      value: "8000"
+    - name: ENVIRONMENT
+      value: "staging"
+
+  secretsManager:
+    enabled: true
+    secretProviderClass: mypythonproject1-backend-secrets-staging
+
+frontend:
+  image:
+    repository: mypythonproject1/frontend
+    # ↓ Updated automatically by cd-eks-gitops.yml
+    tag: "staging-0000000"
+
+  replicaCount: 2
+
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 4
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:372212891811:certificate/REPLACE_WITH_STAGING_CERT_ARN"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+  host: "app.staging.example.com"   # replace with your staging domain
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::372212891811:role/mypythonproject1-staging-pod-role"

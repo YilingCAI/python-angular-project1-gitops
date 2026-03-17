@@ -1,0 +1,48 @@
+###############################################################################
+# ArgoCD Application — staging
+#
+# References the shared Helm chart, overrides with environments/staging/values.yaml.
+# Image tag is updated automatically by the CI/CD pipeline in the app repo.
+###############################################################################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mypythonproject1-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: mypythonproject1
+    environment: staging
+  annotations:
+    # Notify Slack on sync/health changes (requires ArgoCD notifications controller)
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployments
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: deployments
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YilingCAI/python-angular-project1-gitops.git
+    targetRevision: main
+    path: charts/mypythonproject1
+    helm:
+      # Environment-specific overrides layer on top of chart defaults
+      valueFiles:
+        - ../../environments/staging/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mypythonproject1-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 2m
+  revisionHistoryLimit: 5

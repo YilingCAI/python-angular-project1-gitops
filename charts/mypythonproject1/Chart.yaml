@@ -1,0 +1,19 @@
+apiVersion: v2
+name: mypythonproject1
+description: >
+  FastAPI backend + Angular frontend deployed on EKS via ArgoCD.
+  Supports staging and production environments via Helm value overrides.
+type: application
+version: 0.1.0
+appVersion: "0.0.0"   # overridden per environment by image.tag
+
+keywords:
+  - python
+  - fastapi
+  - angular
+  - eks
+  - argocd
+
+maintainers:
+  - name: platform-team
+    email: platform@example.com

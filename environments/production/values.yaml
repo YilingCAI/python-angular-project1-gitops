@@ -1,0 +1,88 @@
+###############################################################################
+# Production environment overrides
+# Image tags below are automatically updated by the CI/CD pipeline.
+# DO NOT edit image tags manually — they will be overwritten on next deploy.
+###############################################################################
+
+global:
+  registry: "372212891811.dkr.ecr.us-east-1.amazonaws.com"
+  imagePullPolicy: Always
+
+backend:
+  image:
+    repository: mypythonproject1/backend
+    # ↓ Updated automatically by cd-eks-gitops.yml on tag push
+    tag: "v0.0.0"
+
+  replicaCount: 3
+
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 70
+
+  env:
+    - name: LOG_LEVEL
+      value: "info"
+    - name: PORT
+      value: "8000"
+    - name: ENVIRONMENT
+      value: "production"
+
+  secretsManager:
+    enabled: true
+    secretProviderClass: mypythonproject1-backend-secrets-production
+
+frontend:
+  image:
+    repository: mypythonproject1/frontend
+    # ↓ Updated automatically by cd-eks-gitops.yml on tag push
+    tag: "v0.0.0"
+
+  replicaCount: 3
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "300m"
+      memory: "256Mi"
+
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 8
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:372212891811:certificate/REPLACE_WITH_PROD_CERT_ARN"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    # WAF association for production
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:us-east-1:372212891811:regional/webacl/REPLACE_WITH_WAF_ARN"
+  host: "app.example.com"   # replace with your production domain
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::372212891811:role/mypythonproject1-production-pod-role"
+
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
