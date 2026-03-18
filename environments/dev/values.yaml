@@ -32,8 +32,11 @@ backend:
     - name: ENVIRONMENT
       value: "dev"
   secretsManager:
-    enabled: true
+    # Disabled until Terraform secret ARNs are known (terraform output jwt_secret_arn, rds_secret_arn).
+    # Re-enable and populate objects[] below after first `terraform apply`.
+    enabled: false
     secretProviderClass: mypythonproject1-backend-secrets-dev
+    objects: []
 frontend:
   image:
     repository: mypythonproject1/frontend
