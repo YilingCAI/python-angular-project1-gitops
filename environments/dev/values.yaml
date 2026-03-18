@@ -5,7 +5,7 @@
 ###############################################################################
 
 global:
-  registry: "209561932650.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "284464749723.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: Always
 backend:
   image:
@@ -32,13 +32,25 @@ backend:
     - name: ENVIRONMENT
       value: "development"
     - name: DATABASE_HOST
-      value: "mypythonproject1-dev-db.cgjg406sud48.us-east-1.rds.amazonaws.com"
+      valueFrom:
+        secretKeyRef:
+          name: mypythonproject1-db-secret
+          key: host
     - name: DATABASE_PORT
-      value: "5432"
+      valueFrom:
+        secretKeyRef:
+          name: mypythonproject1-db-secret
+          key: port
     - name: DATABASE_NAME
-      value: "gamedb"
+      valueFrom:
+        secretKeyRef:
+          name: mypythonproject1-db-secret
+          key: dbname
     - name: DATABASE_USER
-      value: "postgres"
+      valueFrom:
+        secretKeyRef:
+          name: mypythonproject1-db-secret
+          key: username
     - name: DATABASE_PASSWORD
       valueFrom:
         secretKeyRef:
@@ -68,13 +80,13 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:209561932650:certificate/REPLACE_WITH_DEV_CERT_ARN"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:284464749723:certificate/REPLACE_WITH_DEV_CERT_ARN"
     alb.ingress.kubernetes.io/healthcheck-path: /health
   host: "app.dev.example.com" # replace with your dev domain
 serviceAccount:
   create: true
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::209561932650:role/mypythonproject1-dev-pod-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::284464749723:role/mypythonproject1-dev-pod-role"
 
 deploymentStrategy:
   type: RollingUpdate

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# python-angular-project1-gitops
-ArgoCD + HELM
-=======
 # mypythonproject1-gitops
 
 GitOps repository for **mypythonproject1** — manages Kubernetes/EKS deployments via ArgoCD.
@@ -78,4 +74,3 @@ argocd app create app-of-apps \
 ## Secrets
 
 All application secrets (DB password, JWT key, etc.) are managed via **AWS Secrets Manager** and injected into pods using the [AWS Secrets Store CSI driver](https://github.com/aws/secrets-store-csi-driver-provider-aws). No secrets are stored in this repository.
->>>>>>> 9a27e7a (first commit)
