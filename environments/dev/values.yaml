@@ -30,7 +30,7 @@ backend:
     - name: PORT
       value: "8000"
     - name: ENVIRONMENT
-      value: "dev"
+      value: "development"
   secretsManager:
     # Disabled until Terraform secret ARNs are known (terraform output jwt_secret_arn, rds_secret_arn).
     # Re-enable and populate objects[] below after first `terraform apply`.
