@@ -31,6 +31,19 @@ backend:
       value: "8000"
     - name: ENVIRONMENT
       value: "development"
+    - name: DATABASE_HOST
+      value: "mypythonproject1-dev-db.cgjg406sud48.us-east-1.rds.amazonaws.com"
+    - name: DATABASE_PORT
+      value: "5432"
+    - name: DATABASE_NAME
+      value: "gamedb"
+    - name: DATABASE_USER
+      value: "postgres"
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mypythonproject1-db-secret
+          key: password
   secretsManager:
     # Disabled until Terraform secret ARNs are known (terraform output jwt_secret_arn, rds_secret_arn).
     # Re-enable and populate objects[] below after first `terraform apply`.
