@@ -5,7 +5,7 @@
 ###############################################################################
 
 global:
-  registry: "372212891811.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "209561932650.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: Always
 backend:
   image:
