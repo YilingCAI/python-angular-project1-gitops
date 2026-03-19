@@ -5,7 +5,7 @@
 ###############################################################################
 
 global:
-  registry: "284464749723.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "771743056978.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: Always
 backend:
   image:
@@ -80,13 +80,13 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:284464749723:certificate/REPLACE_WITH_DEV_CERT_ARN"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:771743056978:certificate/REPLACE_WITH_DEV_CERT_ARN"
     alb.ingress.kubernetes.io/healthcheck-path: /health
   host: "app.dev.example.com" # replace with your dev domain
 serviceAccount:
   create: true
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::284464749723:role/mypythonproject1-dev-pod-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::771743056978:role/mypythonproject1-dev-pod-role"
 
 deploymentStrategy:
   type: RollingUpdate

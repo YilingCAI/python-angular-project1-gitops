@@ -5,7 +5,7 @@
 ###############################################################################
 
 global:
-  registry: "284464749723.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "771743056978.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: Always
 
 backend:
@@ -37,6 +37,7 @@ backend:
       value: "8000"
     - name: ENVIRONMENT
       value: "production"
+    
 
   secretsManager:
     enabled: true
@@ -70,16 +71,16 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:284464749723:certificate/REPLACE_WITH_PROD_CERT_ARN"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:771743056978:certificate/REPLACE_WITH_PROD_CERT_ARN"
     alb.ingress.kubernetes.io/healthcheck-path: /health
     # WAF association for production
-    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:us-east-1:284464749723:regional/webacl/REPLACE_WITH_WAF_ARN"
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:us-east-1:771743056978:regional/webacl/REPLACE_WITH_WAF_ARN"
   host: "app.example.com"   # replace with your production domain
 
 serviceAccount:
   create: true
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::284464749723:role/mypythonproject1-production-pod-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::771743056978:role/mypythonproject1-production-pod-role"
 
 deploymentStrategy:
   type: RollingUpdate
