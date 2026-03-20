@@ -6,7 +6,7 @@
 
 global:
   # ECR registry — set to your AWS account ECR endpoint
-  registry: "771743056978.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "567781376531.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: Always
 
 backend:
@@ -88,11 +88,11 @@ ingress:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:771743056978:certificate/REPLACE_WITH_STAGING_CERT_ARN"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:567781376531:certificate/REPLACE_WITH_STAGING_CERT_ARN"
     alb.ingress.kubernetes.io/healthcheck-path: /health
   host: "app.staging.example.com"   # replace with your staging domain
 
 serviceAccount:
   create: true
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::771743056978:role/mypythonproject1-staging-pod-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::567781376531:role/mypythonproject1-staging-pod-role"
