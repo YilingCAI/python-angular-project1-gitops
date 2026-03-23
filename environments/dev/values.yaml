@@ -6,7 +6,7 @@
 
 global:
   registry: "128977215002.dkr.ecr.us-east-1.amazonaws.com"
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
 backend:
   image:
     repository: mypythonproject1/backend
