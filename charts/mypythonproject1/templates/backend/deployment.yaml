@@ -52,6 +52,10 @@ spec:
             - secretRef:
                 name: {{ include "mypythonproject1.fullname" . }}-backend-secrets
           {{- end }}
+          {{- with .Values.backend.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           livenessProbe:
             {{- toYaml .Values.backend.livenessProbe | nindent 12 }}
           readinessProbe:
