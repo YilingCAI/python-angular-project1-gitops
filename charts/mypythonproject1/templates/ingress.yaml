@@ -14,17 +14,23 @@ spec:
     - {{- if .Values.ingress.host }}host: {{ .Values.ingress.host }}
       {{ end -}}http:
         paths:
-          # API routes → backend
-          - path: /api
+          # Backend API routes (no /api prefix in FastAPI)
+          - path: /users
             pathType: Prefix
             backend:
               service:
                 name: {{ include "mypythonproject1.fullname" . }}-backend
                 port:
                   number: {{ .Values.backend.service.port }}
-          # Health check route → backend
+          - path: /games
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mypythonproject1.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
           - path: /health
-            pathType: Exact
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "mypythonproject1.fullname" . }}-backend
