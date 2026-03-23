@@ -29,8 +29,10 @@ spec:
     spec:
       serviceAccountName: {{ include "mypythonproject1.serviceAccountName" . }}
       securityContext:
-        runAsNonRoot: false   # nginx requires root to bind on port 4200
-        fsGroup: 101          # nginx group
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
       terminationGracePeriodSeconds: 30
       containers:
         - name: frontend
