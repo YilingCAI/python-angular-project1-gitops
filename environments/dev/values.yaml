@@ -5,7 +5,7 @@
 ###############################################################################
 
 global:
-  registry: "767397871938.dkr.ecr.us-east-1.amazonaws.com"
+  registry: "584545443115.dkr.ecr.us-east-1.amazonaws.com"
   imagePullPolicy: IfNotPresent
 backend:
   image:
@@ -84,7 +84,7 @@ ingress:
 serviceAccount:
   create: true
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::767397871938:role/mypythonproject1-dev-pod-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::584545443115:role/mypythonproject1-dev-pod-role"
 deploymentStrategy:
   type: RollingUpdate
   rollingUpdate:
