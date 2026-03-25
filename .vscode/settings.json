@@ -3,8 +3,4 @@
     "*/templates/**/*.yaml": "helm",
     "*/templates/**/*.tpl": "helm"
   },
-  "yaml.schemas": {
-    "kubernetes": ["apps/**/*.yaml", "environments/**/*.yaml", "charts/**/*.yaml"]
-  },
-  "yaml.validate": true
 }

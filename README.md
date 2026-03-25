@@ -1,76 +1,116 @@
 # mypythonproject1-gitops
 
-GitOps repository for **mypythonproject1** — manages Kubernetes/EKS deployments via ArgoCD.
+Professional GitOps delivery repository for mypythonproject1 on AWS EKS using Argo CD and Helm.
 
-## Repository Layout
+## Project Overview
 
-```
-mypythonproject1-gitops/
-├── apps/                          # ArgoCD App-of-Apps manifests
-│   ├── app-of-apps.yaml           # Root ArgoCD Application (bootstrapped once)
-│   ├── staging/
-│   │   └── mypythonproject1.yaml  # ArgoCD Application for staging
-│   └── production/
-│       └── mypythonproject1.yaml  # ArgoCD Application for production
-│
-├── charts/
-│   └── mypythonproject1/          # Helm chart for the application
-│       ├── Chart.yaml
-│       ├── values.yaml            # Chart defaults (do not use directly)
-│       └── templates/
-│           ├── _helpers.tpl
-│           ├── backend/
-│           │   ├── deployment.yaml
-│           │   ├── service.yaml
-│           │   ├── hpa.yaml
-│           │   └── pdb.yaml
-│           ├── frontend/
-│           │   ├── deployment.yaml
-│           │   ├── service.yaml
-│           │   ├── hpa.yaml
-│           │   └── pdb.yaml
-│           ├── ingress.yaml
-│           └── serviceaccount.yaml
-│
-└── environments/
-    ├── staging/
-    │   └── values.yaml            # Staging overrides (image tags updated by CI)
-    └── production/
-        └── values.yaml            # Production overrides (image tags updated by CI)
-```
+This repository is the deployment source of truth for Kubernetes runtime state. It contains Argo CD application definitions, Helm chart templates, and environment-specific values for dev, staging, and production.
 
-## Deployment Flow
+Application source code and image builds are handled in mypythonproject1. This repository is responsible for declarative deployment and reconciliation in cluster.
 
-```
-App repo CI
-    │
-    ├─ develop branch → CI success
-    │       │
-    │       └─ cd-eks-gitops.yml builds image (staging-<sha>)
-    │               └─ updates environments/staging/values.yaml
-    │                       └─ ArgoCD auto-syncs → EKS staging namespace
-    │
-    └─ tag v* (from semantic-release on main)
-            │
-            └─ cd-eks-gitops.yml builds image (v1.2.3)
-                    └─ updates environments/production/values.yaml
-                            └─ ArgoCD auto-syncs → EKS production namespace
+## Architecture Flow
+
+GitHub Actions -> Git commit to GitOps values -> Argo CD sync -> EKS workloads
+
+## Architecture Diagram
+
+```text
+App Repository CI (build/push image)
+              |
+              v
++-----------------------------------+
+| GitOps Repository                 |
+| environments/<env>/values.yaml    |
++----------------+------------------+
+                 |
+                 v
++-----------------------------------+
+| Argo CD                            |
+| App-of-Apps + environment apps     |
++----------------+------------------+
+                 |
+                 v
++-----------------------------------+
+| EKS Cluster                        |
+| - backend deployment/service       |
+| - frontend deployment/service      |
+| - ingress and autoscaling          |
++-----------------------------------+
 ```
 
-## Bootstrap ArgoCD
+## Repository Structure
+
+| Path | Purpose |
+|---|---|
+| apps/ | Argo CD Application and App-of-Apps manifests |
+| charts/mypythonproject1/ | Helm chart for backend and frontend workloads |
+| environments/dev/ | Dev Helm values overrides |
+| environments/staging/ | Staging Helm values overrides |
+| environments/production/ | Production Helm values overrides |
+
+## Argo CD Application Model
+
+- apps/app-of-apps.yaml defines root orchestration.
+- apps/dev, apps/staging, and apps/production define environment-specific Argo CD Applications.
+- charts/mypythonproject1 contains reusable templates used across all environments.
+- environments/<env>/values.yaml carries the only environment-specific runtime deltas.
+
+## Deployment Workflow
+
+```text
+Application CI builds and pushes images to ECR
+        -> updates image tag in environments/<env>/values.yaml
+        -> pushes commit to this repository
+        -> Argo CD detects drift from desired state
+        -> syncs Helm release to target namespace
+```
+
+## Local Validation and Rendering
 
 ```bash
-# One-time: register the root App-of-Apps with your ArgoCD instance
-argocd app create app-of-apps \
-  --repo https://github.com/YilingCAI/mypythonproject1-gitops.git \
-  --path apps \
-  --dest-server https://kubernetes.default.svc \
-  --dest-namespace argocd \
-  --sync-policy automated \
-  --auto-prune \
-  --self-heal
+# Lint chart templates
+helm lint charts/mypythonproject1
+
+# Render manifests for each environment
+helm template mypythonproject1 charts/mypythonproject1 -f environments/dev/values.yaml
+helm template mypythonproject1 charts/mypythonproject1 -f environments/staging/values.yaml
+helm template mypythonproject1 charts/mypythonproject1 -f environments/production/values.yaml
 ```
 
-## Secrets
+## Operating Model
 
-All application secrets (DB password, JWT key, etc.) are managed via **AWS Secrets Manager** and injected into pods using the [AWS Secrets Store CSI driver](https://github.com/aws/secrets-store-csi-driver-provider-aws). No secrets are stored in this repository.
+- Dev and staging are typically auto-synced by Argo CD.
+- Production should use manual approval and controlled sync windows.
+- Rollback is done by reverting Git commits in this repository.
+
+## Security and Governance
+
+- No plaintext secrets are stored in this repository.
+- Runtime secrets should be injected from a managed secret system.
+- Protect production values with branch protection and required reviews.
+- Enforce signed commits and least-privilege write access where possible.
+
+## Bootstrap Argo CD (one-time)
+
+```bash
+argocd app create app-of-apps \
+        --repo <gitops-repo-url> \
+        --path apps \
+        --dest-server https://kubernetes.default.svc \
+        --dest-namespace argocd
+```
+
+## Tech Stack
+
+- Argo CD
+- Helm
+- Kubernetes (EKS)
+- GitHub Actions
+- AWS ECR
+
+## Future Improvements
+
+- Add Helm unit and policy tests in CI before values changes merge.
+- Add environment-level promotion PR automation.
+- Add progressive delivery strategy for production sync.
+- Add manifest security scanning and SBOM verification.
