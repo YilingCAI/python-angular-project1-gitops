@@ -7,7 +7,13 @@ metadata:
   labels:
     {{- include "mypythonproject1.labels" . | nindent 4 }}
   annotations:
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- $annotations := dict }}
+    {{- range $k, $v := .Values.ingress.annotations }}
+    {{- if $v }}
+    {{- $_ := set $annotations $k $v }}
+    {{- end }}
+    {{- end }}
+    {{- toYaml $annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
